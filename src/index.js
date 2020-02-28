@@ -1,46 +1,76 @@
-// VARIABLE DECLARATIONS
+// starting
 
+// pseudocode
+// practice get, post, patch, organization, data transfer
+
+
+TOYS_URL = 'http://localhost:3000/toys'
 let addToy = false;
-const addBtn = document.querySelector("#new-toy-btn");
 const toyForm = document.querySelector(".container");
-const toyContainer = document.getElementById("toy-collection")
-const addNewToy = document.getElementsByClassName("add-toy-form")[0]
-// const addNewToy = document.querySelector(".add-toy-form")
+const addButton = document.querySelector('#new-toy-btn')
+const cardsContainer = document.querySelector('#toy-collection')
 
-// FUNCTIONS
+
 
 const handleAddingToyFormShow = () => {
   addToy = !addToy;
   addToy ? toyForm.style.display = "block" : toyForm.style.display = "none";
 }
-const fetchToyData = () => {
-  fetch("http://localhost:3000/toys")
-    .then( resp => resp.json() )
-    .then( toysData => renderToyCard(toysData) )
-    .catch( err => console.log(err) )
+
+const fetchToys = () => {
+  fetch(TOYS_URL)
+  .then(resp => resp.json())
+  .then(toysData => renderToys(toysData))
+  .catch(err => console.log(err))
 }
-const renderToyCard = (toysData) => {
-  toysData.forEach( toyData => {
-    const toyCard = `<div class="card">
-      <h2>${toyData.name}</h2>
-      <img src=${toyData.image}="toy-avatar" />
-      <p>${toyData.likes} Likes </p>
-      <button data-id=${toyData.id} class="like-btn">Like <3</button>
-    </div>
-  `
-  toyContainer.innerHTML += toyCard
+
+const renderToys = (toysData) => {
+  toysData.forEach(toy => {
+    const toyCard = ` <div class="card" >
+    <h2>${toy.name}</h2>
+    <img src=${toy.image} class="toy-avatar" />
+    <p>${toy.likes} Likes </p>
+    <button class="like-btn" data-id="${toy.id}" data-likes="${toy.likes}" >Like <3</button>
+  </div>`
+  cardsContainer.innerHTML += toyCard
   })
 }
-const postNewToy = () => {
+
+const addNewToy = (event) => {
   event.preventDefault()
-  const name = addNewToy.children[1].value
-  const image = addNewToy.children[3].value
-  fetch("http://localhost:3000/toys", createPostObj(name, image) )
-    .then( resp => resp.json() )
-    .then( newToyData => renderNewToyCard(newToyData) )
-    .catch( err => console.log(err) )
+  let toyName = event.target[0].value
+  let toyImage = event.target[1].value
+  if (toyImage === "") {
+    toyImage = "http://www.pngmart.com/files/3/Toy-Story-Alien-PNG-File.png"
+  }
+  if (toyName === "") {
+    toyName = "Little Green Men"
+  }
+  fetch(TOYS_URL, newToyObj(toyName, toyImage))
+  .then(resp => resp.json())
+  .then(newToy => renderNewToy(newToy))
+  .catch(err => console.log(err))
 }
-const createPostObj = (name, image) => {
+
+const renderNewToy = (newToy) => {
+  toyForm.children[0].reset()
+  toyForm.children[0].appendChild(document.createElement('p'))
+  const pTag = toyForm.children[0].children[6]
+  pTag.style.fontSize = "20px"
+  pTag.style.textAlign = "center"
+  pTag.style.color = "Red"
+  pTag.style.backgroundColor = "yellow"
+  toyForm.children[0].children[6].innerText = `Success! ${newToy.name} added to Andy's Toy List!`
+  const toyCard = ` <div class="card" >
+  <h2>${newToy.name}</h2>
+  <img src=${newToy.image} class="toy-avatar" />
+  <p>${newToy.likes} Likes </p>
+  <button class="like-btn" data-id="${newToy.id}" data-likes="${newToy.likes}">Like <3</button>
+</div>`
+cardsContainer.innerHTML += toyCard
+}
+
+const newToyObj = (toyName, toyImage) => {
   return {
     method: "POST",
     headers: {
@@ -48,55 +78,57 @@ const createPostObj = (name, image) => {
       "Accept": "application/json"
     },
     body: JSON.stringify({
-      name: name,
-      image: image,
+      name: toyName,
+      image: toyImage,
       likes: 0
     })
   }
 }
-const renderNewToyCard = (newToyData) => {
-  const toyCard = `<div class="card">
-    <h2>${newToyData.name}</h2>
-    <img src=${newToyData.image}="toy-avatar" />
-    <p>${newToyData.likes} Likes </p>
-    <button data-id=${toyData.id} class="like-btn">Like <3</button>
-  </div>
-  `
-  toyContainer.innerHTML += toyCard
+
+const likeToy = (event) => {
+  if (event.target.className === "like-btn") {
+    const toyId = parseInt(event.target.dataset.id)
+    const likes = parseInt(event.target.dataset.likes)
+    const clicked = event.target
+    fetch(`${TOYS_URL}/${toyId}`, likePatchObj(likes))
+    .then(resp => resp.json())
+    .then(updatedToy => renderUpdatedToy(clicked, updatedToy))
+    .catch(err => console.log(err))
+  }
 }
-const updateLikeObj = (likes) => {
+
+const likePluralize = (number) => {
+  return number == 1 ? "Like" : "Likes"
+}
+
+const renderUpdatedToy = (clicked, updatedToy) => {
+  console.log(updatedToy)
+  clicked.dataset.likes = updatedToy.likes
+  clicked.previousElementSibling.innerText = `${updatedToy.likes} ${likePluralize(updatedToy.likes)}`
+}
+
+const likePatchObj = (likes) => {
   return {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json"
     },
-    body: JSON.stringify({likes: likes + 1})
+    body: JSON.stringify({
+      likes: likes + 1
+    })
   }
 }
-// ${event.target.dataset.id} is linked to <button data-id=${toyData.id} in render functions
-const likeToy = () => {
-  const clicked = event.target
-  if (clicked.tagName === "BUTTON") {
-    const likes = parseInt(event.target.previousElementSibling.innerText.split(" ")[0])
-    fetch(`http://localhost:3000/toys/${event.target.dataset.id}`, updateLikeObj(likes) )
-      .then( resp => resp.json() )
-      .then( updatedToy => renderUpdatedLikes(clicked, updatedToy))
-      .catch( err => console.log(err) )
-  }
-}
-const renderUpdatedLikes = (clicked, updatedToy) => {
-  const likesEl = clicked.previousElementSibling
-  const likePluralize = updatedToy.likes === 1 ? "Like" : "Likes"
-  likesEl.innerHTML = `${updatedToy.likes} ${likePluralize}`
-}
 
-// eventLISTENERS
 
-addBtn.addEventListener("click", handleAddingToyFormShow)
-addNewToy.addEventListener("submit", postNewToy)
-toyContainer.addEventListener("click", likeToy)
 
-// INVOKED
+//  event listeners
 
-fetchToyData()
+
+addButton.addEventListener('click', handleAddingToyFormShow)
+toyForm.addEventListener('submit', addNewToy)
+cardsContainer.addEventListener('click', likeToy)
+
+
+ //  invoked functions
+fetchToys()
