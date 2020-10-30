@@ -1,3 +1,4 @@
+
 console.log("uncomment lines 3-end for the ES5 syntax version")
 
 // NOTE that I do not use the DOMContentLoaded Event listener
