@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Toy Tale</title>
-    <script type="text/javascript" src="src/index.js"></script>
+    <script type="text/javascript" src="src/index.js" defer ></script>
     <link rel="stylesheet" href="index.css" />
   </head>
   <body>
@@ -43,9 +43,10 @@
       </form>
     </div>
     <p style="text-align:center">
-      Andy needs your help! <button id="new-toy-btn">Add a new toy!</button>
+      Andy needs your help! <button data-dog="dog" data-toy-name="name" data-id="1" id="new-toy-btn">Add a new toy!</button>
     </p>
 
     <div id="toy-collection"></div>
+
   </body>
 </html>
